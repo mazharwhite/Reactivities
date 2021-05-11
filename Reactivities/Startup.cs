@@ -16,49 +16,54 @@ using Persistence;
 
 namespace Reactivities
 {
-    public class Startup
-    {
-        private readonly IConfiguration _config;
+	public class Startup
+	{
+		private readonly IConfiguration _config;
 
-        public Startup(IConfiguration config)
-        {
-            _config = config;
-        }
+		public Startup(IConfiguration config)
+		{
+			_config = config;
+		}
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddControllers();
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo {Title = "Reactivities", Version = "v1"});
-            });
-            
-            // Add Db Reference
-            services.AddDbContext<DataContext>(opt =>
-            {
-                // specify which service to use as database
-                opt.UseSqlite(_config.GetConnectionString("DefaultConnection"));
-            });
-        }
+		// This method gets called by the runtime. Use this method to add services to the container.
+		public void ConfigureServices(IServiceCollection services)
+		{
+			services.AddControllers();
+			services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "Reactivities", Version = "v1"}); });
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Reactivities v1"));
-            }
+			// Add Db Reference
+			services.AddDbContext<DataContext>(opt =>
+			{
+				// specify which service to use as database
+				opt.UseSqlite(_config.GetConnectionString("DefaultConnection"));
+			});
 
-            app.UseHttpsRedirection();
+			services.AddCors(opt =>
+			{
+				opt.AddPolicy("CorsPolicy",
+					policy => { policy.AllowAnyMethod().AllowAnyHeader().WithOrigins("http://localhost:3000"); });
+			});
+		}
 
-            app.UseRouting();
+		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+		{
+			if (env.IsDevelopment())
+			{
+				app.UseDeveloperExceptionPage();
+				app.UseSwagger();
+				app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Reactivities v1"));
+			}
 
-            app.UseAuthorization();
+			app.UseHttpsRedirection();
 
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-        }
-    }
+			app.UseRouting();
+
+			app.UseCors("CorsPolicy");
+
+			app.UseAuthorization();
+
+			app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+		}
+	}
 }
